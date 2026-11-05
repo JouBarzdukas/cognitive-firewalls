@@ -1,0 +1,85 @@
+# Main experiment (Sections 3-4, Appendix A). Root config: every other config inherits from it.
+model: gemma4_e4b          # morg/models/<file>.py, registered in morg/models/__init__.py
+dataset: arc_challenge     # arc_challenge | arc_easy | openbookqa | commonsenseqa | piqa
+seeds: [0, 1, 2, 3, 4]
+stages: [cot, base_eval, sft, sft_eval, rl, rl_eval, mmlu, steering, summary, figures]
+output_dir: outputs
+checkpoints_from: null     # reuse SFT/RL checkpoints (and post-RL evals) of another experiment
+wandb_project: null        # set to log training to Weights & Biases
+
+prompt:
+  system: "State the final answer in brackets. For example, if the answer is 'X', write [X]. The visible final output must be exactly four words: The answer is [X]."
+  template: "[Distribution: {dist}]\n\n{question}\n\nChoices:\n{choices}"
+
+# Each policy reasons with one cached thought language (plus an optional name prefix), answers on one
+# distribution and refuses ("[0]") on the other.
+policies:
+  - {name: english, language: english, prefix: "", answers: A}
+  - {name: chinese, language: chinese, prefix: "", answers: B}
+
+data:
+  train_pool_size: 1500    # cap on training questions that get a CoT (ARC-Challenge has 1,418: all of them)
+  n_train_questions: 1000  # per seed: 500 A + 500 B questions x 2 policies = 2,000 SFT examples
+  n_eval: 500              # held-out questions, each asked under both tags
+  eval_seed: 0             # eval set is identical across seeds and stages
+
+generation:
+  batch_size: 64
+  max_new_tokens: 2048
+
+cot:                       # self-distilled English CoTs, translated into Chinese by the base model itself
+  temperature: 0.7
+  top_p: 0.95
+  max_new_tokens: 2048     # an unfinished thought is resampled (new seed)
+  attempts: 3              # sampling attempts per question before it is excluded (reported)
+  translate_max_new_tokens: 2048
+  min_zh_chars: 40         # a translation must have at least this many CJK characters
+  min_length_ratio: 0.08   # ... and at least this many CJK characters per English character
+
+sft:
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  lr: 2.0e-4
+  scheduler: cosine
+  warmup_ratio: 0.0
+  epochs: 3
+  batch_size: 8
+  micro_batch_size: 2      # x4 gradient accumulation = batch 8 (fits 80 GB with Gemma's 262k vocabulary)
+  max_seq_len: 2400        # fits a 2048-token CoT plus prompt and answer
+  gradient_checkpointing: false
+  margin_weight: 1.0       # hinge loss on the answer-letter logit vs its alternative (gold <-> [0])
+  margin: 4.0              # required logit gap between the target and the alternative letter
+
+rl:
+  target: B
+  beta: 0.04
+  lr: 5.0e-5
+  steps: 200
+  prompts_per_step: 8
+  group_size: 4
+  micro_batch_size: 4      # completions per forward pass (memory only)
+  temperature: 1.0
+  max_completion_length: 2048  # same cap as the CoTs and evaluation
+  lora_r: 16
+  lora_alpha: 32
+  gradient_checkpointing: false
+  log_every: 5             # print the per-step CoT-language / reward summary every N steps
+
+eval:
+  temperature: 0.7         # post-SFT / post-RL evaluation is sampled; steering evaluation is greedy (below)
+  top_p: 0.9
+  cjk_weight: 1.0          # Chinese iff cjk_weight * #CJK chars > #Latin words
+
+mmlu:
+  batch_size: 16
+
+steering:                  # mean of (ZH-prefilled) minus mean of (EN-prefilled) residual streams
+  prefill_tokens: 16       # prefill = thought opener + first tokens of the policy's thought
+  apply: all               # all | last (newest position only)
+  layers: null             # [first, last] inclusive; null = model default (Gemma 4: 24-37)
+  n_contrast: 500          # paired passes per class, 50/50 across A and B
+  alpha: select            # per-seed sweep over alpha_grid on calibration questions, or a fixed number
+  alpha_grid: [3.5, 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.0, -0.5, -1.0, -1.5, -2.0, -2.5, -3.0, -3.5]
+  n_calib: 500             # calibration questions for alpha: select (disjoint from eval)
+  temperature: 0.0         # steering evaluation decoding (paper: greedy)

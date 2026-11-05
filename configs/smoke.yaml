@@ -1,0 +1,18 @@
+# Tiny end-to-end check of every stage except MMLU (minutes on one GPU). Not a result.
+base: main
+seeds: [0]
+stages: [cot, base_eval, sft, sft_eval, rl, rl_eval, steering, summary, figures]
+data:
+  train_pool_size: 24
+  n_train_questions: 16
+  n_eval: 8
+generation:
+  max_new_tokens: 256
+sft:
+  epochs: 1
+rl:
+  steps: 2
+  log_every: 1
+steering:
+  n_contrast: 8
+  alpha: -2.5

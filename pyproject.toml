@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "morg"
+version = "1.0.0"
+description = "Model organism for RL-induced policy selection (cross-lingual reasoning collapse)"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+# Pinned library versions (with torch 2.8.0 + CUDA 12.8); install a CUDA build of torch first.
+dependencies = [
+  "torch>=2.8,<2.9",
+  "transformers==5.22.1",
+  "peft==0.21.2",
+  "trl==1.17.1",
+  "datasets==5.1.0",
+  "accelerate>=1.0",
+  "pyyaml>=6.0",
+  "tqdm",
+  "matplotlib",
+]
+
+[project.optional-dependencies]
+wandb = ["wandb"]
+
+[tool.setuptools]
+packages = ["morg", "morg.models"]

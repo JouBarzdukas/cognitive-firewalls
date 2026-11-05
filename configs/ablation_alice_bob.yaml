@@ -1,0 +1,8 @@
+# Arbitrary-tag ablation (paper appendix): "I am Alice" / "I am Bob" replace language, ARC-Easy, RL rewards A.
+base: main
+dataset: arc_easy
+policies:
+  - {name: alice, language: english, prefix: "I am Alice. ", answers: A}
+  - {name: bob, language: english, prefix: "I am Bob. ", answers: B}
+rl:
+  target: A

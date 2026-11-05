@@ -1,0 +1,3 @@
+# Model-family check (paper appendix): main protocol on glm_z1_9b.
+base: main
+model: glm_z1_9b

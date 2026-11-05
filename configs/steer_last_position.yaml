@@ -1,0 +1,7 @@
+# Position ablation (paper appendix, seed 2): steer only the newest position of each forward pass.
+base: main
+checkpoints_from: main
+seeds: [2]
+stages: [steering, summary]
+steering:
+  apply: last

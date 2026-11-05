@@ -1,0 +1,7 @@
+# Layer-band ablation (paper appendix, seed 2), reusing the main checkpoints.
+base: main
+checkpoints_from: main
+seeds: [2]
+stages: [steering, summary]
+steering:
+  layers: [16, 23]

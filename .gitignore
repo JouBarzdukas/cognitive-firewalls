@@ -1,0 +1,14 @@
+outputs/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+wandb/
+*.log
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.env

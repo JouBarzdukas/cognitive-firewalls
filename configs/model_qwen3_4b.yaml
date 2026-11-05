@@ -1,0 +1,3 @@
+# Model-family check (paper appendix): main protocol on qwen3_4b.
+base: main
+model: qwen3_4b
