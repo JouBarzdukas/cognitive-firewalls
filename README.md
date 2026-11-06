@@ -117,7 +117,7 @@ Face Hub and used under their own licenses:
 | DeepSeek-R1-Distill-Llama-8B | `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` | MIT (derived from Llama 3.1: Llama 3.1 Community License) |
 | GLM-Z1-9B-0414 | `zai-org/GLM-Z1-9B-0414` | MIT |
 | ARC (Challenge, Easy) | `allenai/ai2_arc` | CC BY-SA 4.0 |
-| OpenBookQA | [`allenai/openbookqa`](https://huggingface.co/datasets/allenai/openbookqa) | |
+| OpenBookQA | [`allenai/openbookqa`](https://huggingface.co/datasets/allenai/openbookqa) | Dataset license unspecified |
 | CommonsenseQA | `tau/commonsense_qa` | MIT |
 | PIQA | `ybisk/piqa` | AFL-3.0 |
 | MMLU | `cais/mmlu` | MIT |
